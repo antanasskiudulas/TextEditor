@@ -7,7 +7,7 @@ import Text.Printf
 data TextEditor a = Sets([Char],Char,[Char],[Char],[Char])
 
 --instance of a text editor with default params
-text = Sets("Summer ",'|',"Time Sadnes",[],[])
+text = Sets("",'|',"",[],[])
 
 --when TextEditor instance are shown i.e. printed, they are printed in text=[] highlights=[] clipboard=[] --format}
 instance (Show a) => Show (TextEditor a) where
@@ -96,32 +96,43 @@ setCursorStart(Sets(b,k,p,h,z))
     |h /= []                    = Sets([],k,b++p++h,[],z)
     |otherwise                  = Sets([],k,b++p++h,h,z)
 
+--sets the cursor to the end of the text by returning empty left set (p) and concatinating highlight set (h)
+--to the left of left set(b) and concatinating the right set(p) to the right of right set(b)
+--if when doing this operation the highlight is not empty, it should be emptied to say that it's deselected
 setCursorEnd::TextEditor(e) -> TextEditor(e)
 setCursorEnd(Sets(b,k,p,h,z))
     |h /= []                    = Sets(h++b++p,k,[],[],z)
     |otherwise                  = Sets(h++b++p,k,[],h,z)
 
+--works by sending whatever is highlighted(h) to the clipboard(z)
 copy::TextEditor(e) -> TextEditor(e)
 copy(Sets(b,k,p,h,z)) = Sets(b,k,p,h,h)
 
+--pastes all characters from the clipboard(z) to the right of left character set(b) and clears what was highlighted(h)
 paste::TextEditor(e) -> TextEditor(e)
 paste(Sets(b,k,p,h,z)) = Sets(b++z,k,p,[],z)
 
+--cut just empties the highlighted set and sets the clipboard(z) to the highlighted(z) set
 cut::TextEditor(e) -> TextEditor(e)
 cut(Sets(b,k,p,h,z)) = Sets(b,k,p,[],h)
 
+--removes character to the left of the cursor(b)
+--reverse("Hello") -> "olleH" -> tail("olleH") -> "lleH" -> reverse("lleH") -> "Hell"
 backspace::TextEditor(e) -> TextEditor(e)
 backspace(Sets(b,k,p,h,z)) = Sets(reverse(tail(reverse(b))),k,p,h,z)
 
+--empties highlighted set (unlike cut, doesn't pass the removed set to clipboard)
 deleteSelection::TextEditor(e) -> TextEditor(e)
 deleteSelection(Sets(b,k,p,h,z)) = Sets(b,k,p,[],z)
 
+--loads contents of given fileName and returns a text editor
 load::([Char],TextEditor(e)) -> IO(TextEditor(e))
 load(fileName,Sets(b,k,p,h,z)) = do
     contents <-readFile fileName
     putStr("You have successfully loaded: "++fileName++"\n")
-    return(Sets(contents,k,p,h,z))
-    
+    return(Sets(contents,k,[],[],[]))
+
+--saves the text editor to the desired fileName
 save::([Char],TextEditor(e)) -> IO(TextEditor(e))
 save(fileName, Sets(b,k,p,h,z)) = do
     writeFile fileName b
