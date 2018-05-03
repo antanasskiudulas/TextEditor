@@ -10,8 +10,8 @@ instance Show TextEditor where
     show (Sets(b,k,p,h,z)) = printf("text=["++b++k:[]++p++"]"++" highlights=["++h++"]"++" clipboard=["++z++"]")
 
 --takes a list of strings from user input and concatinates with the left hand side of the cursor
-userInput:: (TextEditor, [Char]) -> TextEditor
-userInput(Sets(b,k,p,h,z),inString)= Sets(b++inString,k,p,h,z) 
+userInput:: [Char] -> TextEditor
+userInput(inString)= Sets(inString,'|',[],[],[]) 
 
 --moves cursor left by moving characters from the left of the cursor (b) to the right (p)
 --move can only performed if left list (b) is not empty when moving, else recursivly call itself with --empty highlight set (append the highlight to characters to the right(p))
@@ -115,7 +115,9 @@ cut(Sets(b,k,p,h,z)) = Sets(b,k,p,[],h)
 --removes character to the left of the cursor(b)
 --reverse("Hello") -> "olleH" -> tail("olleH") -> "lleH" -> reverse("lleH") -> "Hell"
 backspace::TextEditor -> TextEditor
-backspace(Sets(b,k,p,h,z)) = Sets(reverse(tail(reverse(b))),k,p,h,z)
+backspace(Sets(b,k,p,h,z))
+    |b == []             = Sets(b,k,p,h,z)
+    |otherwise           = Sets(reverse(tail(reverse(b))),k,p,h,z)
 
 --empties highlighted set (unlike cut, doesn't pass the removed set to clipboard)
 deleteSelection::TextEditor -> TextEditor
